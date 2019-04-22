@@ -1,7 +1,9 @@
 import codemonkey.click as click
 import codemonkey.config as cfglib
 
-from .group_pip import group_pip
+from .gitcmds import entry as gitcmds
+from .pipcmds import entry as pipcmds
+from .venvcmds import entry as venvcmds
 
 
 class Wrench(click.Bootstrap):
@@ -33,7 +35,9 @@ def main(obj):
     """ MonkeyWrench is a set of utility tools to help with development tasks """
 
 
-main.add_command(group_pip)
+main.add_command(gitcmds)
+main.add_command(pipcmds)
+main.add_command(venvcmds)
 
 
 @main.command("tree")

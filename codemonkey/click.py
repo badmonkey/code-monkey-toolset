@@ -2,7 +2,6 @@ import functools
 import os
 import shlex
 import sys
-from pprint import pprint
 from string import Template
 from typing import Dict, List, Tuple
 
@@ -34,8 +33,11 @@ class WrenchGroup(DYMGroup, HelpColorsGroup, click.Group):
 
     def format_aliases(self, ctx, formatter):
         if hasattr(self, "aliases"):
+            helpdata = getattr(self, "aliases")
+            if not helpdata:
+                return
             with formatter.section("Aliases"):
-                formatter.write_dl(getattr(self, "aliases"))
+                formatter.write_dl(helpdata)
 
 
 class WrenchCommand(HelpColorsCommand, click.Command):
@@ -74,6 +76,58 @@ def catch_exception(exception, exit_code=1, message=None):
     return decorator
 
 
+def format_command_tree(ctx):
+    treedata = _build_command_tree(ctx.find_root().command)
+
+    output = []
+    _format_tree(output, treedata)
+
+    formatter = ctx.make_formatter()
+    formatter.write_dl(output)
+
+    return formatter.getvalue()
+
+
+class _TreeData:
+    def __init__(self, click_command):
+        self.name = click_command.name
+        self.children = []
+        self.short_help = None
+
+        if isinstance(click_command, click.Command):
+            self.short_help = click_command.get_short_help_str()
+
+
+def _build_command_tree(click_command):
+    data = _TreeData(click_command)
+
+    if isinstance(click_command, click.Group):
+        data.children = [_build_command_tree(cmd) for _, cmd in click_command.commands.items()]
+
+    return data
+
+
+def _format_tree(output, treedata, depth=0, is_last_item=False, is_last_parent=False):
+    if depth == 0:
+        prefix = ""
+        tree_item = ""
+    else:
+        prefix = "    " if is_last_parent else "│   "
+        tree_item = "└── " if is_last_item else "├── "
+
+    help_str = ("  \t" + treedata.short_help) if treedata.short_help else ""
+    output.append((prefix * (depth - 1) + tree_item + treedata.name, help_str))
+
+    for i, child in enumerate(sorted(treedata.children, key=lambda x: x.name)):
+        _format_tree(
+            output,
+            child,
+            depth=(depth + 1),
+            is_last_item=(i == (len(treedata.children) - 1)),
+            is_last_parent=is_last_item,
+        )
+
+
 def format_argv(args=None):
     args = args or sys.argv[:]
     args[0] = os.path.basename(args[0])
@@ -104,7 +158,6 @@ class Bootstrap:
         self.argv = AliasedArgv()
 
     def run(self, cmdline_group, exename: str = None, aliases: SectionType = None, **kwargs):
-        print("CMDLINE", sys.argv)
         context = Context(cmdline_group)
 
         try:
@@ -119,8 +172,6 @@ class Bootstrap:
 
         if exename:
             kwargs.setdefault("prog_name", exename)
-
-        print("RUNNING", sys.argv)
 
         if isinstance(cmdline_group, WrenchGroup):
             setattr(cmdline_group, "aliases", self.argv.alias_help)
@@ -240,8 +291,6 @@ def update_argv_aliases(
 
     newargv = False
 
-    pprint(subst)
-
     for k, v in subst:
         ismatch, env = _match(k, sys.argv[1:])
         if ismatch:
@@ -249,11 +298,8 @@ def update_argv_aliases(
             newargv = True
             break
 
-    print("DBG", newargv, argv.aliased)
-
     if not newargv:
         argv.aliased = [exename] + _replace(argv.other_tmpl, {"*": sys.argv[1:]})
-        print("DEF", argv.aliased)
 
     if change_argv:
         sys.argv = argv.aliased

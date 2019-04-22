@@ -1,5 +1,3 @@
-
 from setuptools import setup
 
-setup()
-
+project = setup().metadata.__dict__

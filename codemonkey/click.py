@@ -139,6 +139,7 @@ class AliasedArgv:
     def __init__(self):
         self.original: ArgvType = sys.argv[:]
         self.aliased: ArgvType = sys.argv
+        self.script: Tuple[ArgvType] = ()
         self.exename: str = os.path.basename(sys.argv[0])
         self.other_tmpl: str = "*"
         self.alias_help = []
@@ -151,6 +152,16 @@ class AliasedArgv:
 
     def is_unchanged(self):
         return False
+
+    def is_script(self):
+        return bool(self.script)
+
+    def print_help(self, ctx):
+        if self.alias_help:
+            formatter = ctx.make_formatter()
+            with formatter.section("Aliases"):
+                formatter.write_dl(self.alias_help)
+            print(formatter.getvalue())
 
 
 class Bootstrap:
@@ -167,7 +178,9 @@ class Bootstrap:
                 self.argv.exename = exename
         except Exception as e:
             # make pretty again
-            print(e)
+            import traceback
+
+            traceback.print_exc()
             sys.exit(1)
 
         if exename:
@@ -179,6 +192,10 @@ class Bootstrap:
         context.obj = self
 
         kwargs["parent"] = context
+
+        print("SCRIPT", self.argv.is_script())
+
+        # handle running multi-command sys.argv
 
         return cmdline_group.main(**kwargs)
 
@@ -250,20 +267,29 @@ def _strip_options(value: ArgvType) -> ArgvType:
     return output
 
 
+def _format_script(args, longdesc=None):
+    if isinstance(args, tuple):
+        if longdesc:
+            return f"{longdesc}\n" + "\n".join([f"'{format_argv(x)}'" for x in args])
+        return f"'{format_argv(args[0])}'\n..."
+    return f"'{format_argv(args)}'"
+
+
 def _format_alias(subst, pass_any):
     output = {}
     for k, v in subst:
-        fk = f"'{format_argv(k)}'"
+        fk = _format_script(k)
         if v:
-            output[fk] = f"'{format_argv(v)}'"
+            output[fk] = _format_script(v)
+            # output[fk] = _format_script(v, longdesc="Multicommand script...")
         else:
             output[fk] = "Command is ignored"
     output = sorted(output.items(), key=lambda x: x[0])
     if pass_any:
         if len(pass_any) == 1 and pass_any[0] == "*":
-            output.append(("Other", f"args are forwarded"))
+            output.append(("Other", f"args are forwarded unchanged"))
         else:
-            output.append(("Other", f"args are forwarded as '{format_argv(pass_any)}'"))
+            output.append(("Other", _format_script(pass_any, longdesc="Multicommand script...")))
     else:
         output.append(("Other", "All other commands are ignored"))
     return output
@@ -279,7 +305,10 @@ def update_argv_aliases(
     subst = {}
 
     for k, v in cfg.items():
-        subst[k] = (shlex.split(k), shlex.split(v))
+        if isinstance(v, list):
+            subst[k] = (shlex.split(k), tuple(shlex.split(x) for x in v))
+        else:
+            subst[k] = (shlex.split(k), shlex.split(v))
 
     if "*" in subst:
         argv.other_tmpl = subst["*"][1]
@@ -294,12 +323,21 @@ def update_argv_aliases(
     for k, v in subst:
         ismatch, env = _match(k, sys.argv[1:])
         if ismatch:
-            argv.aliased = [exename] + _replace(v, env)
+            if isinstance(v, tuple):
+                argv.aliased = [exename]
+                argv.script = tuple([exename] + _replace(x, env) for x in v)
+            else:
+                argv.aliased = [exename] + _replace(v, env)
+                argv.script = ()
             newargv = True
             break
 
     if not newargv:
-        argv.aliased = [exename] + _replace(argv.other_tmpl, {"*": sys.argv[1:]})
+        if isinstance(argv.other_tmpl, tuple):
+            pass
+        else:
+            argv.aliased = [exename] + _replace(argv.other_tmpl, {"*": sys.argv[1:]})
+            argv.script = ()
 
     if change_argv:
         sys.argv = argv.aliased

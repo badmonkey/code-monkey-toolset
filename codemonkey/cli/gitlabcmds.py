@@ -1,9 +1,9 @@
-import codemonkey.click as click
+import codemonkey.lib.click as click
 
 
 @click.group("gitlab")
 def entry():
-    """ Commands for working with gitlab """
+    """ [group] Commands for working with gitlab """
 
 
 @entry.command("test")

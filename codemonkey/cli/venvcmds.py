@@ -1,9 +1,9 @@
-import codemonkey.click as click
+import codemonkey.lib.click as click
 
 
 @click.group("venv")
 def entry():
-    """ Commands for working with venv """
+    """ [group] Commands for working with venv """
 
 
 @entry.command("test")

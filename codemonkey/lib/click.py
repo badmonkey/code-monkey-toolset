@@ -13,6 +13,7 @@ from click import (  # noqa:W0611
     option,
     pass_context,
     pass_obj,
+    secho,
     version_option,
 )
 from click_didyoumean import DYMGroup
@@ -137,10 +138,16 @@ def format_argv(args=None):
 
 class AliasedArgv:
     def __init__(self):
-        self.original: ArgvType = sys.argv[:]
-        self.aliased: ArgvType = sys.argv
-        self.script: Tuple[ArgvType] = ()
+        self.exepath: str = sys.argv[0]
         self.exename: str = os.path.basename(sys.argv[0])
+
+        self.original: ArgvType = sys.argv[:]
+        self.original[0] = self.exename
+
+        self.aliased: ArgvType = sys.argv
+        self.aliased[0] = self.exename
+
+        self.script: Tuple[ArgvType] = ()
         self.other_tmpl: str = "*"
         self.alias_help = []
 
@@ -150,8 +157,8 @@ class AliasedArgv:
     def update(self, aliases, exename=None, change_argv=False):
         update_argv_aliases(self, aliases, exename=exename, change_argv=change_argv)
 
-    def is_unchanged(self):
-        return False
+    def is_changed(self):
+        return any(x != y for x, y in zip(self.original, self.aliased))
 
     def is_script(self):
         return bool(self.script)

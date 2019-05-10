@@ -1,6 +1,8 @@
-import codemonkey.click as click
-import codemonkey.config as cfglib
-import codemonkey.slugify as slugify
+from blessed import Terminal
+
+import codemonkey.lib.click as click
+import codemonkey.lib.config as cfglib
+import codemonkey.lib.slugify as slugify
 
 from .gitcmds import entry as gitcmds
 from .gitlabcmds import entry as gitlabcmds
@@ -91,19 +93,25 @@ def main_config(ctx, raw):
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.pass_obj
 def main_shell(obj, args):
-    """ Run cmdline as a shell command """
+    """ Run remaining cmdline as a shell command """
 
     print("SHELL", args)
 
 
 @main.command("ignore", context_settings=dict(ignore_unknown_options=True))
+@click.option("--info", is_flag=True, default=False)
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.pass_obj
-def main_ignore(obj, args):
-    """ Do nothing but print sys.argv """
+def main_ignore(obj, info, args):
+    """ Do nothing. Maybe print some info about sys.argv """
 
-    print(f"sys.argv as typed: {click.format_argv(obj.argv.original)}")
-    print(f"sys.argv as run:   {click.format_argv(obj.argv.aliased)}")
+    if info:
+        t = Terminal()
+        orig = t.red if obj.argv.is_changed() else ""
+        click.secho(f"sys.argv as {t.blue('typed')}: {orig}{click.format_argv(obj.argv.original)}")
+        click.secho(
+            f"sys.argv as {t.blue('run')}:   {t.green}{click.format_argv(obj.argv.aliased)}"
+        )
 
 
 @main.command("slug")

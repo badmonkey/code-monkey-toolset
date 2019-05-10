@@ -1,9 +1,9 @@
-import codemonkey.click as click
+import codemonkey.lib.click as click
 
 
 @click.group("pip")
 def entry():
-    """ Commands for working with pip """
+    """ [group] Commands for working with pip """
 
 
 @entry.command("compile")

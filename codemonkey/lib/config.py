@@ -69,40 +69,48 @@ def load(toolname: str = "monkey", configname: str = "wrench.ini", prefix: str =
 
         iniconfig = configparser.ConfigParser()
 
+    inipath = os.path.expanduser(f".venv/{configname}")
+    if os.path.isfile(inipath):
+        iniconfig.read(inipath)
+
+        update_dict_from_config(config, iniconfig)
+
+        iniconfig = configparser.ConfigParser()
+
     if os.path.exists("setup.cfg"):
         iniconfig.read("setup.cfg")
 
-        update_dict_from_config(config, iniconfig, whiteprefix=prefix)
+        update_dict_from_config(config, iniconfig, ourprefix=prefix)
 
         iniconfig = configparser.ConfigParser()
 
     return Config(config)
 
 
-def update_dict_from_config(adict, config, whiteprefix=None):
-    if whiteprefix:
-        _white_check = f"{whiteprefix}."
-        _white_len = len(_white_check)
+def update_dict_from_config(adict, config, ourprefix=None):
+    if ourprefix:
+        _our_check = f"{ourprefix}."
+        _our_len = len(_our_check)
 
-        def white_check(x):
-            return x.startswith(_white_check)
+        def our_check(x):
+            return x.startswith(_our_check)
 
-        def white_trim(x):
-            return x[_white_len:]
+        def our_trim(x):
+            return x[_our_len:]
 
     else:
 
-        def white_check(x):
+        def our_check(x):
             return True
 
-        def white_trim(x):
+        def our_trim(x):
             return x
 
     for section in config.sections():
-        if not white_check(section):
+        if not our_check(section):
             continue
 
-        newsection = white_trim(section)
+        newsection = our_trim(section)
         adict.setdefault(newsection, {})
         for key, val in config.items(section):
             adict[newsection][key] = as_typed(val)

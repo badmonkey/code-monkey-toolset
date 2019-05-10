@@ -1,9 +1,9 @@
-import codemonkey.click as click
+import codemonkey.lib.click as click
 
 
 @click.group("prj")
 def entry():
-    """ Commands for working with projects """
+    """ [group] Commands for working with projects """
 
 
 @entry.command("test")

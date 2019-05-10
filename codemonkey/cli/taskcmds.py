@@ -1,9 +1,9 @@
-import codemonkey.click as click
+import codemonkey.lib.click as click
 
 
 @click.group("task")
 def entry():
-    """ Commands for working with tasks """
+    """ [group] Commands for working with tasks """
 
 
 @entry.command("test")

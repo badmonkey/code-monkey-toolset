@@ -59,30 +59,20 @@ def load(toolname: str = "monkey", configname: str = "wrench.ini", prefix: str =
 
     config = {}
 
-    iniconfig = configparser.ConfigParser()
+    def read_and_merge(fname, ourprefix=None):
+        inipath = os.path.expanduser(fname)
+        if os.path.isfile(inipath):
+            iniconfig = configparser.ConfigParser()
+            iniconfig.read(inipath)
 
-    inipath = os.path.expanduser(f"~/.config/{toolname}/{configname}")
-    if os.path.isfile(inipath):
-        iniconfig.read(inipath)
+            update_dict_from_config(config, iniconfig, ourprefix=ourprefix)
+            return True
+        return False
 
-        update_dict_from_config(config, iniconfig)
-
-        iniconfig = configparser.ConfigParser()
-
-    inipath = os.path.expanduser(f".venv/{configname}")
-    if os.path.isfile(inipath):
-        iniconfig.read(inipath)
-
-        update_dict_from_config(config, iniconfig)
-
-        iniconfig = configparser.ConfigParser()
-
-    if os.path.exists("setup.cfg"):
-        iniconfig.read("setup.cfg")
-
-        update_dict_from_config(config, iniconfig, ourprefix=prefix)
-
-        iniconfig = configparser.ConfigParser()
+    read_and_merge(f"~/.config/{toolname}/{configname}")
+    read_and_merge(f".project/{configname}")
+    read_and_merge(configname)
+    read_and_merge("setup.cfg", ourprefix=prefix)
 
     return Config(config)
 

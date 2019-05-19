@@ -1,3 +1,3 @@
 from setuptools import setup
 
-project = setup().metadata.__dict__
+project = setup(setup_requires="setupmeta").metadata.__dict__

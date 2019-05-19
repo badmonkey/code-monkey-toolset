@@ -5,6 +5,9 @@ import sys
 from string import Template
 from typing import Dict, List, Tuple
 
+from click_didyoumean import DYMGroup
+from click_help_colors import HelpColorsCommand, HelpColorsGroup
+
 import click
 from click import (  # noqa:W0611
     UNPROCESSED,
@@ -16,8 +19,6 @@ from click import (  # noqa:W0611
     secho,
     version_option,
 )
-from click_didyoumean import DYMGroup
-from click_help_colors import HelpColorsCommand, HelpColorsGroup
 
 SectionType = Dict[str, str]
 ConfigType = Dict[str, SectionType]
@@ -204,7 +205,8 @@ class Bootstrap:
 
         # handle running multi-command sys.argv
 
-        return cmdline_group.main(**kwargs)
+        result = cmdline_group.main(standalone_mode=False, **kwargs)
+        sys.exit(result)
 
 
 def _match(pattern: ArgvType, args: ArgvType) -> Tuple[bool, ArgvType]:

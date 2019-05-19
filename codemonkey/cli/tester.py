@@ -8,7 +8,7 @@ import click
 def init():
     print(sys.argv)
 
-    main()
+    main()  # noqa
 
 
 @click.group()
@@ -36,6 +36,6 @@ def main_site():
 
 @main.command("config")
 def main_config():
-    import codemonkey.config as cfg
+    import codemonkey.lib.config as cfg
 
     print(cfg.load())

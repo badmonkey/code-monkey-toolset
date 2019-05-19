@@ -117,7 +117,48 @@ def main_ignore(obj, info, args):
 @main.command("slug")
 @click.argument("text")
 @click.pass_obj
-def main_shell(obj, text):
+def main_slug(obj, text):
     """ Generate a branch name from some text """
 
     print("SLUG", slugify.for_branch_uri(text))
+
+
+@main.command("test")
+@click.pass_obj
+def main_test(obj):
+    """ test some code """
+
+    print("---\n")
+
+    from codemonkey.lib.bus import bus, EventBase
+
+    class TestEvent(EventBase):
+        def __init__(self, *args, docancel=False, **kwargs):
+            super().__init__()
+            self.docancel = docancel
+            self.result = f"args: {args}, kwargs: {kwargs}"
+
+    @bus.handler("test", TestEvent)
+    def evtTest(evt):
+        print("HANDLE", evt.result)
+        return "all good!"
+
+    @evtTest.check
+    def frog(evt):
+        print("CHECK1")
+
+    @evtTest.check
+    def bad(evt):
+        print("CHECK2", evt.docancel)
+        if evt.docancel:
+            evt.cancel()
+
+    @evtTest.notify
+    def blah(evt, result):
+        print("NOTIFY", result)
+
+    print("TEST1", evtTest(TestEvent(name="test1")), "\n")
+
+    print("TEST2", bus.emit("test", TestEvent(name="test2")), "\n")
+    print("TEST3", bus.emit("test", 1, 2, name="test3"), "\n")
+    print("TEST4", bus.emit("test", 1, 2, docancel=True, name="test4"), "\n")

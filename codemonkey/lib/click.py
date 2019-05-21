@@ -13,6 +13,7 @@ from click import (  # noqa:W0611
     UNPROCESSED,
     Context,
     argument,
+    get_current_context,
     option,
     pass_context,
     pass_obj,
@@ -23,6 +24,11 @@ from click import (  # noqa:W0611
 SectionType = Dict[str, str]
 ConfigType = Dict[str, SectionType]
 ArgvType = List[str]
+
+
+def current_obj():
+    ctx = get_current_context()
+    return ctx.obj if ctx else None
 
 
 class WrenchGroup(DYMGroup, HelpColorsGroup, click.Group):

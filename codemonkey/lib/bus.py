@@ -1,11 +1,12 @@
 import asyncio
+from dataclasses import dataclass, field
 from typing import Any, Callable, List, Mapping, Type
 
 
+@dataclass
 class EventBase:
-    def __init__(self):
-        self._stop_processing: bool = False
-        self._valid: bool = True
+    _stop_processing: bool = field(default=False, init=False)
+    _valid: bool = field(default=True, init=False)
 
     def run_immediately(self):
         self._stop_processing = True

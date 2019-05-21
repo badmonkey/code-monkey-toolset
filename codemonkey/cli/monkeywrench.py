@@ -6,7 +6,6 @@ import codemonkey.lib.slugify as slugify
 
 from .gitcmds import entry as gitcmds
 from .gitlabcmds import entry as gitlabcmds
-from .pipcmds import entry as pipcmds
 from .prjcmds import entry as prjcmds
 from .ritualcmds import entry as ritualcmds
 from .taskcmds import entry as taskcmds
@@ -44,7 +43,6 @@ def main(obj):
 
 main.add_command(gitcmds)
 main.add_command(gitlabcmds)
-main.add_command(pipcmds)
 main.add_command(prjcmds)
 main.add_command(ritualcmds)
 main.add_command(taskcmds)
@@ -61,8 +59,9 @@ def main_tree(ctx):
 
 @main.command("config")
 @click.option("--raw", is_flag=True)
+@click.option("--explain", is_flag=True)
 @click.pass_context
-def main_config(ctx, raw):
+def main_config(ctx, raw, explain):
     """ Print config data """
     obj = ctx.obj
 
@@ -72,17 +71,33 @@ def main_config(ctx, raw):
         pprint(obj.config.values)
     else:
 
-        def _print_section(name):
-            cfg = obj.config.get_merged_section(name, obj.argv.exename)
-            if cfg:
-                print(f"Config for [{name}]")
-                pprint(cfg)
-                print()
+        if explain:
+
+            def _print_section(name):
+                info = obj.config.get_section_info(name, obj.argv.exename)
+                if info:
+                    title = f"Config for [{name}]"
+                    print(title)
+                    print("=" * len(title))
+                    for v in info.values():
+                        print(v.format())
+                    print()
+
+        else:
+
+            def _print_section(name):
+                cfg = obj.config.get_merged_section(name, obj.argv.exename)
+                if cfg:
+                    title = f"Config for [{name}]"
+                    print(title)
+                    print("=" * len(title))
+                    for k, v in cfg.items():
+                        print(f"{k}: {v}")
+                    print()
 
         _print_section("wrench")
         _print_section("wrench.git")
         _print_section("wrench.gitlab")
-        _print_section("wrench.pip")
         _print_section("wrench.prj")
         _print_section("wrench.venv")
 

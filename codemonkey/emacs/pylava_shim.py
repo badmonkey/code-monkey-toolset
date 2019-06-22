@@ -67,6 +67,6 @@ def main(rcfile, files, **ignored):
                 break
 
     with open("/tmp/shim.log", "a") as f:
-        f.write(f"cmd {rcargs}")
+        f.write(f"cmd {rcargs}\n")
 
     pylama.shell(args=rcargs + list(files))

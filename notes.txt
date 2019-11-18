@@ -71,6 +71,9 @@ such as permissions data. This hook can likewise validate the presence of files 
 when the working tree changes.
 
 
+https://www.conventionalcommits.org/en/v1.0.0-beta.4/#summary
+
+
 == tui ==
 http://urwid.org/reference/index.html
 
@@ -81,10 +84,18 @@ http://urwid.org/reference/index.html
 https://www.python.org/dev/peps/pep-0518/
 
 
+== pip ==
+~/.config/pip/pip.conf
+VENV/pip.conf
+
+https://pypi.org/project/pip_check_reqs/
 
 
 == venv ==
 https://docs.python.org/3/library/venv.html
+
+pip, setuptools
+virtualenv, virtualenv-clone, virtualenvwrapper
 
 
 https://github.com/dstufft/pvr
@@ -94,12 +105,45 @@ https://github.com/steinwurf/waf/blob/master/src/wurf/virtualenv.py
 https://github.com/Julian/venvs
 https://github.com/nerdvegas/rez
 
+~/.virtualenvs/VENVNAME/pyvenv.cfg
+~/.virtualenvs/VENVNAME/.project
 
 https://pypi.org/project/pip-lock/
 https://github.com/jgonggrijp/pip-review
 https://pypi.org/project/pip-check/
 https://github.com/ohjeah/pip-validate
 https://pypi.org/project/pip-autoremove/
+
+rm /home/mfagan/.virtualenvs/codemonkey/bin/python /home/mfagan/.virtualenvs/codemonkey/bin/python3
+/home/mfagan/.pyenv/versions/3.7.2/bin/python3.7 -m venv --upgrade codemonkey/
+
+
+> print(sys.prefix)
+/opt/home/mfagan/.virtualenvs/codemonkey
+
+> print(sys.base_prefix)
+/home/mfagan/.pyenv/versions/3.7.2
+
+> print(sys.path)
+[''
+, '/opt/home/mfagan/.virtualenvs/codemonkey/bin'
+, '/home/mfagan/.pyenv/versions/3.7.2/lib/python37.zip'
+, '/home/mfagan/.pyenv/versions/3.7.2/lib/python3.7'
+, '/home/mfagan/.pyenv/versions/3.7.2/lib/python3.7/lib-dynload'
+, '/opt/home/mfagan/.virtualenvs/codemonkey/lib/python3.7/site-packages'
+, '/opt/projects/code-monkey-toolset']
+
+
+
+== pyenv ==
+https://realpython.com/intro-to-pyenv/
+https://github.com/pyenv/pyenv
+
+
+~/.pyenv/version
+~/.pyenv/versions/PVERNAME/
+~/.pyenv/versions/PVERNAME/envs/ENAME/
+
 
 
 
@@ -155,6 +199,13 @@ https://pypi.org/project/scalpl/
 
 ==============================
 
+https://github.com/zsimic/mgit
+https://fabioz.github.io/mu-repo/
+https://git-scm.com/docs/git-stash
+https://dev.to/tanker/tsrc---handling-multiple-git-repositories-at-scale--eg3
+http://mixu.net/gr/
+https://github.com/pypa/virtualenv/blob/master/virtualenv.py
+https://github.com/Othernet-Project/sqlize
 
 
 
@@ -226,3 +277,133 @@ plug = @package.module.func
 
 > git plug A B C
 ... invoke(package.module.func, A, B, C)
+
+
+
+def get_subscribed(listener: Listener) -> Subscribable:
+    arg_spec = inspect.getfullargspec(listener)
+    if inspect.ismethod(listener):
+        allowed_args_len = 2
+    else:
+        allowed_args_len = 1
+    if len(arg_spec.args) != allowed_args_len:
+        raise ValueError('{} is not accepting a single argument!'.format(listener))
+    annotated_arg = arg_spec.annotations.get(arg_spec.args[-1])
+    return annotated_arg  # type: ignore
+
+
+PRJNAME
+PROJECTS_DIR
+VENV_DIR
+NEWNAME
+
+edit PROJECTS_DIR/PRJNAME/.git/config
+	 point to new git
+
+edit VENV_DIR/PRJNAME/.project
+	 set to PROJECTS_DIR/NEWNAME
+
+edit VENV_DIR/PRJNAME/bin/activate*
+	 change to use NEWNAME
+
+rm PROJECTS_DIR/PRJNAME/.venv
+
+mv PROJECTS_DIR/PRJNAME PROJECTS_DIR/NEWNAME
+mv VENV_DIR/PRJNAME VENV_DIR/NEWNAME
+
+ln -s VENV_DIR/NEWNAME PROJECTS_DIR/NEWNAME/.venv
+
+
+
+
+def skip_site_packages_logs(record: logging.LogRecord) -> bool:
+    # This skips the log records that are generated from libraries
+    # installed in site packages.
+    # Workaround for https://code.djangoproject.com/ticket/26886
+    if 'site-packages' in record.pathname:
+        return False
+    return True
+
+def find_log_caller_module(record: logging.LogRecord) -> Optional[str]:
+    '''Find the module name corresponding to where this record was logged.
+    Sadly `record.module` is just the innermost component of the full
+    module name, so we have to go reconstruct this ourselves.
+    '''
+    # Repeat a search similar to that in logging.Logger.findCaller.
+    # The logging call should still be on the stack somewhere; search until
+    # we find something in the same source file, and that should give the
+    # right module name.
+    f = logging.currentframe()  # type: ignore  # Not in typeshed, and arguably shouldn't be
+    while f is not None:
+        if f.f_code.co_filename == record.pathname:
+            return f.f_globals.get('__name__')
+        f = f.f_back
+    return None
+
+logger_nicknames = {
+    'root': '',  # This one is more like undoing a nickname.
+    'zulip.requests': 'zr',  # Super common.
+}
+
+def find_log_origin(record: logging.LogRecord) -> str:
+    logger_name = logger_nicknames.get(record.name, record.name)
+
+    if settings.LOGGING_SHOW_MODULE:
+        module_name = find_log_caller_module(record)
+        if module_name == logger_name or module_name == record.name:
+            # Abbreviate a bit.
+            return logger_name
+        else:
+            return '{}/{}'.format(logger_name, module_name or '?')
+    else:
+        return logger_name
+
+
+
+def try_git_describe() -> Optional[str]:
+    try:  # nocoverage
+        return subprocess.check_output(
+            ['git',
+             '--git-dir', os.path.join(os.path.dirname(__file__), '../.git'),
+             'describe', '--tags', '--always', '--dirty', '--long'],
+            stderr=subprocess.PIPE,
+        ).strip().decode('utf-8')
+    except Exception:  # nocoverage
+        return None
+
+
+
+
+def info(type, value, tb):
+    if hasattr(sys, 'ps1') or not sys.stderr.isatty():
+    # we are in interactive mode or we don't have a tty-like
+    # device, so we call the default hook
+        sys.__excepthook__(type, value, tb)
+    else:
+        import traceback, pdb
+        # we are NOT in interactive mode, print the exception...
+        traceback.print_exception(type, value, tb)
+        print
+        # ...then start the debugger in post-mortem mode.
+        # pdb.pm() # deprecated
+        pdb.post_mortem(tb) # more "modern"
+
+sys.excepthook = info
+
+
+
+https://www.hindawi.com/journals/mpe/2015/626408/
+
+https://www.rdocumentation.org/packages/EnvStats/versions/2.3.0/topics/serialCorrelationTest
+
+
+
+
+https://github.com/okonet/lint-staged
+https://github.com/typicode/husky
+https://github.com/kkujawinski/git-pre-push-hook
+
+
+http://urwid.org/
+https://github.com/tonycpsu/panwid
+https://github.com/tonycpsu/urwid_utils

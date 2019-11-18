@@ -1,0 +1,228 @@
+
+per-venv customize
+.venv/lib/python3.6/site-packages/sitecustomize.py
+
+
+zax cuz coz jam pyx wiz zap zep kex vex zag fox box hex zin zim
+lux zit zoo nix axe egg
+monk
+xgit
+pydev
+ape
+
+
+q w r t    a e  p
+s d f g    i o  h j k l
+z x c v b  u y  n m
+
+
+
+
+container
+bag capsule carton crate jug pail pot sack tank vase vial
+beaker canteen casket cauldron hopper hutch pod reliquary stein vat
+
+
+requirements.txt
+
+
+
+
+== git hooks ==
+prepare-commit-msg
+The prepare-commit-msg hook is run before the commit message editor is fired up but after the default message is created.
+It lets you edit the default message before the commit author sees it. This hook takes a few parameters: the path to the
+file that holds the commit message so far, the type of commit, and the commit SHA-1 if this is an amended commit. This hook
+generally isn’t useful for normal commits; rather, it’s good for commits where the default message is auto-generated,
+such as templated commit messages, merge commits, squashed commits, and amended commits. You may use it in conjunction with
+a commit template to programmatically insert information.
+
+https://www.conventionalcommits.org/en/v1.0.0-beta.4/
+
+
+
+commit-msg
+The commit-msg hook takes one parameter, which again is the path to a temporary file that contains the commit message written
+by the developer. If this script exits non-zero, Git aborts the commit process, so you can use it to validate your project
+state or commit message before allowing a commit to go through. In the last section of this chapter, we’ll demonstrate using
+this hook to check that your commit message is conformant to a required pattern.
+
+
+
+
+post-commit
+After the entire commit process is completed, the post-commit hook runs. It doesn’t take any parameters, but you can easily get
+the last commit by running git log -1 HEAD. Generally, this script is used for notification or something similar.
+
+
+
+
+post-checkout
+After you run a successful git checkout, the post-checkout hook runs; you can use it to set up your working directory properly
+for your project environment. This may mean moving in large binary files that you don’t want source controlled, auto-generating
+documentation, or something along those lines.
+
+
+
+
+post-merge
+The post-merge hook runs after a successful merge command. You can use it to restore data in the working tree that Git can’t track,
+such as permissions data. This hook can likewise validate the presence of files external to Git control that you may want copied in
+when the working tree changes.
+
+
+== tui ==
+http://urwid.org/reference/index.html
+
+
+
+
+== pyproject.toml ==
+https://www.python.org/dev/peps/pep-0518/
+
+
+
+
+== venv ==
+https://docs.python.org/3/library/venv.html
+
+
+https://github.com/dstufft/pvr
+https://github.com/PyAr/fades
+https://github.com/sarugaku/virtenv/blob/master/virtenv.py
+https://github.com/steinwurf/waf/blob/master/src/wurf/virtualenv.py
+https://github.com/Julian/venvs
+https://github.com/nerdvegas/rez
+
+
+https://pypi.org/project/pip-lock/
+https://github.com/jgonggrijp/pip-review
+https://pypi.org/project/pip-check/
+https://github.com/ohjeah/pip-validate
+https://pypi.org/project/pip-autoremove/
+
+
+
+== gitlab ==
+https://pypi.org/project/python-gitlab/
+
+
+
+
+== webbrowser ==
+https://docs.python.org/3/library/webbrowser.html
+
+
+
+
+== graph/network ==
+https://networkx.github.io/documentation/stable/tutorial.html
+
+
+
+
+== plotting ala timelines ==
+https://matplotlib.org/
+
+
+
+
+== jupyter-hub ==
+https://github.com/minrk/jupyterhub-client
+
+
+
+
+https://pypi.org/project/activitypub/
+https://pypi.org/project/federation/
+
+
+
+
+== other ==
+https://docs.python.org/3/library/pydoc.html
+https://github.com/click-contrib/click_params/tree/master/click_params
+
+
+== other-magnify ==
+https://github.com/naphatkrit/click-extensions/blob/master/click_extensions/decorators.py
+https://pypi.org/project/arv/
+
+
+https://pypi.org/project/scalpl/
+
+
+
+==============================
+
+
+
+
+git-ui
+
+stash management
+
+git stash branch <branch>
+
+
+
+https://github.com/r1chardj0n3s/pip-check-reqs/blob/master/pip_check_reqs/common.py
+
+
+
+
+https://legacy.python.org/dev/peps/pep-0405/
+
+https://github.com/python/cpython/blob/3.7/Lib/venv/__init__.py
+
+https://github.com/jazzband/pip-tools
+
+pip-compile
+pip-sync
+
+
+pipdeptree
+https://github.com/naiquevin/pipdeptree
+
+
+https://pypi.org/project/pip-stripper/
+
+
+https://github.com/Midnighter/dependency-info/blob/master/src/depinfo/info.py
+
+
+https://github.com/sjkingo/virtualenv-api
+
+
+how change python version in a venv
+https://github.com/pyenv/pyenv
+
+
+
+
+[alias:ved]
+co = commit
+
+[alias:*]
+help = --help
+
+
+[alias]
+co = commit -m "some text"
+view = ext viewer *
+cat = !cat *
+plug = @package.module.func
+
+
+
+> git co A
+... git commit -m "some text"
+
+> git view A B C
+... git ext viewer A B C
+
+> git cat A
+... exec cat A
+
+> git plug A B C
+... invoke(package.module.func, A, B, C)
